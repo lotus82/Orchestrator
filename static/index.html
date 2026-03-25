@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Event — прототип</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --panel: #151a22;
+      --border: #2a3344;
+      --text: #e8edf5;
+      --muted: #8b98ab;
+      --accent: #3dff8a;
+      --accent-dim: #1f8f52;
+      --danger: #ff5c5c;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2433 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #13261c 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(160deg, rgba(255,255,255,0.04), transparent 40%), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+    video {
+      width: 100%;
+      border-radius: calc(var(--radius) - 4px);
+      background: #000;
+      border: 1px solid var(--border);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 160px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0e1218;
+      color: var(--text);
+      font: inherit;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: transform 0.08s ease, filter 0.15s ease;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-secondary {
+      background: #222a36;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3dff8a, #1ec96a);
+      color: #04120a;
+      font-weight: 700;
+    }
+    .btn-event {
+      width: 100%;
+      margin-top: 14px;
+      padding: 22px 18px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4d7cff, #7a5cff);
+      color: #fff;
+      letter-spacing: 0.02em;
+      box-shadow: 0 14px 40px rgba(77, 124, 255, 0.35);
+    }
+    .btn-event:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(61, 255, 138, 0.1);
+      color: var(--accent);
+      font-size: 0.85rem;
+      border: 1px solid rgba(61, 255, 138, 0.25);
+    }
+    .leaderboard h2 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .toast {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .toast.ok {
+      display: block;
+      background: rgba(61, 255, 138, 0.12);
+      border: 1px solid rgba(61, 255, 138, 0.35);
+      color: var(--accent);
+    }
+    .toast.err {
+      display: block;
+      background: rgba(255, 92, 92, 0.12);
+      border: 1px solid rgba(255, 92, 92, 0.35);
+      color: #ffb4b4;
+    }
+    .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    code { color: #c7d4ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Live Event Game</h1>
+        <div class="sub">Нажмите «Событие!» в момент гола — чем ближе к эталону AI, тем больше очков.</div>
+      </div>
+      <div class="pill" id="userPill">Гость — зарегистрируйтесь</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <video id="matchVideo" controls playsinline preload="metadata">
+          <source id="videoSource" src="/videos/penalty_ball.mp4" type="video/mp4" />
+          Ваш браузер не поддерживает видео. Положите <code>penalty_ball.mp4</code> в папку <code>videos/</code>.
+        </video>
+
+        <div class="row">
+          <input type="text" id="username" placeholder="Имя игрока" autocomplete="username" />
+          <button type="button" class="btn-secondary" id="btnRegister">Регистрация</button>
+          <button type="button" class="btn-primary" id="btnRefreshLb">Обновить таблицу</button>
+        </div>
+
+        <button type="button" class="btn-event" id="btnEvent" disabled>Событие!</button>
+
+        <div class="toast" id="toast" role="status"></div>
+        <p class="hint">
+          API: <code>/api</code>. После добавления видео запустите обработку:
+          <code>POST /api/streams/{id}/process</code> (Celery worker должен быть запущен).
+        </p>
+      </div>
+
+      <div class="card leaderboard">
+        <h2>Турнирная таблица</h2>
+        <div id="lbEmpty" class="hint">Пока нет очков. Сделайте первый клик.</div>
+        <table id="lbTable" style="display:none">
+          <thead>
+            <tr><th>#</th><th>Игрок</th><th>Очки</th></tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = ""; // тот же origin (uvicorn на :8000)
+
+    const LS_USER = "live_event_user_id";
+    const LS_USERNAME = "live_event_username";
+
+    const el = (id) => document.getElementById(id);
+
+    let currentStreamId = null;
+
+    function showToast(message, ok = true) {
+      const t = el("toast");
+      t.textContent = message;
+      t.className = "toast " + (ok ? "ok" : "err");
+      clearTimeout(showToast._tm);
+      showToast._tm = setTimeout(() => { t.className = "toast"; t.textContent = ""; }, 4500);
+    }
+
+    async function apiJson(path, options = {}) {
+      const res = await fetch(API + path, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (_) { /* noop */ }
+      if (!res.ok) {
+        const detail = data && data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : text;
+        throw new Error(detail || res.statusText);
+      }
+      return data;
+    }
+
+    function updateUserPill() {
+      const uid = localStorage.getItem(LS_USER);
+      const name = localStorage.getItem(LS_USERNAME);
+      const pill = el("userPill");
+      if (uid && name) {
+        pill.textContent = `Игрок: ${name}`;
+        el("btnEvent").disabled = !currentStreamId;
+      } else {
+        pill.textContent = "Гость — зарегистрируйтесь";
+        el("btnEvent").disabled = true;
+      }
+    }
+
+    async function loadStreams() {
+      try {
+        const streams = await apiJson("/api/streams");
+        if (!streams.length) {
+          showToast("Нет трансляций в БД. Запустите API и дождитесь сида.", false);
+          return;
+        }
+        currentStreamId = streams[0].id;
+        const fn = streams[0].filename;
+        el("videoSource").src = `/videos/${encodeURIComponent(fn)}`;
+        el("matchVideo").load();
+        updateUserPill();
+      } catch (e) {
+        showToast(String(e.message || e), false);
+      }
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const rows = await apiJson("/api/game/leaderboard?limit=30");
+        const body = el("lbBody");
+        body.innerHTML = "";
+        if (!rows.length) {
+          el("lbTable").style.display = "none";
+          el("lbEmpty").style.display = "block";
+          return;
+        }
+        el("lbEmpty").style.display = "none";
+        el("lbTable").style.display = "table";
+        rows.forEach((r, i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(r.username)}</td><td>${r.total_score}</td>`;
+          body.appendChild(tr);
+        });
+      } catch (e) {
+        showToast(String(e.message || e), false);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    el("btnRegister").addEventListener("click", async () => {
+      const name = el("username").value.trim();
+      if (!name) {
+        showToast("Введите имя игрока", false);
+        return;
+      }
+      try {
+        const u = await apiJson("/api/users/register", {
+          method: "POST",
+          body: JSON.stringify({ username: name }),
+        });
+        localStorage.setItem(LS_USER, u.id);
+        localStorage.setItem(LS_USERNAME, u.username);
+        showToast(`Добро пожаловать, ${u.username}!`);
+        updateUserPill();
+      } catch (e) {
+        showToast(String(e.message || e), false);
+      }
+    });
+
+    el("btnEvent").addEventListener("click", async () => {
+      const uid = localStorage.getItem(LS_USER);
+      if (!uid || !currentStreamId) return;
+      const video = el("matchVideo");
+      const t = video.currentTime;
+      try {
+        const r = await apiJson("/api/game/click", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: uid,
+            stream_id: currentStreamId,
+            click_timestamp_sec: t,
+          }),
+        });
+        const dt = r.delta_t == null ? "—" : r.delta_t.toFixed(3);
+        showToast(`Очки: ${r.score_awarded} · Δt = ${dt} с · эталон: ${r.t_true == null ? "—" : r.t_true.toFixed(3)} с`);
+        await loadLeaderboard();
+      } catch (e) {
+        showToast(String(e.message || e), false);
+      }
+    });
+
+    el("btnRefreshLb").addEventListener("click", loadLeaderboard);
+
+    updateUserPill();
+    loadStreams().then(() => loadLeaderboard());
+    setInterval(loadLeaderboard, 15000);
+  </script>
+</body>
+</html>
