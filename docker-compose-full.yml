@@ -1,0 +1,76 @@
+# Микросервисный стек: PostgreSQL, Redis, API (FastAPI), Celery Worker.
+# Видео кладите в ./videos (например penalty.mp4) — каталог смонтирован в контейнеры.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: game
+      POSTGRES_PASSWORD: game
+      POSTGRES_DB: game_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U game -d game_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: .
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://game:game@postgres:5432/game_db
+      DATABASE_URL_SYNC: postgresql://game:game@postgres:5432/game_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      VIDEO_STORAGE_PATH: /app/videos
+      YOLO_DEBUG_OUTPUT: /app/data/debug_output.mp4
+    volumes:
+      - ./videos:/app/videos:ro
+      - api_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build: .
+    command: celery -A src.core.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://game:game@postgres:5432/game_db
+      DATABASE_URL_SYNC: postgresql://game:game@postgres:5432/game_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      VIDEO_STORAGE_PATH: /app/videos
+      YOLO_DEBUG_OUTPUT: /app/data/debug_output.mp4
+      YOLO_DEBUG_MODE: "0"
+    volumes:
+      - ./videos:/app/videos:ro
+      - api_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  api_data:
