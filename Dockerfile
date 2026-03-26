@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Копируем облегченные зависимости (без OpenCV, YOLO и Celery)
-COPY requirements-lite.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем исходный код
